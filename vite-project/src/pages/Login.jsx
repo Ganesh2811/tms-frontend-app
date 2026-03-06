@@ -3,9 +3,10 @@ import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import Textbox from "../component/Textbox";
 import Button from "../component/Button";
+import { useSelector } from "react-redux";
 
 const Login = () => {
-    const user = "";
+    const { user } = useSelector((state) => state.auth);
     const {
         register,
         handleSubmit,
