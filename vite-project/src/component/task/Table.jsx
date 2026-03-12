@@ -39,6 +39,7 @@ const Table = ({ tasks }) => {
   );
 
   const TableRow = ({ task }) => (
+
     <tr className='border-b border-gray-200 text-gray-600 hover:bg-gray-300/10'>
       <td className='py-2'>
         <div className='flex items-center gap-2'>
@@ -132,7 +133,6 @@ const Table = ({ tasks }) => {
         </div>
       </div>
 
-      {/* TODO */}
       <ConfirmatioDialog
         open={openDialog}
         setOpen={setOpenDialog}
