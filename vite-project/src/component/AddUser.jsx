@@ -10,16 +10,8 @@ import Button from "./Button";
 const AddUser = ({ open, setOpen, userData }) => {
     let defaultValues = userData ?? {};
     const { user } = useSelector((state) => state.auth);
-
-    const isLoading = false,
-        isUpdating = false;
-
-    const {
-        register,
-        handleSubmit,
-        formState: { errors },
-    } = useForm({ defaultValues });
-
+    const isLoading = false, isUpdating = false;
+    const { register, handleSubmit, formState: { errors }} = useForm({ defaultValues });
     const handleOnSubmit = () => { };
 
     return (
