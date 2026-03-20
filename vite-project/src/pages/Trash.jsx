@@ -1,12 +1,13 @@
 import clsx from "clsx";
 import React, { useState } from "react";
 import { MdDelete, MdKeyboardArrowDown, MdKeyboardArrowUp, MdKeyboardDoubleArrowUp, MdOutlineRestore} from "react-icons/md";
-import { tasks } from "../assets/data";
-import Title from "../component/Title";
-import Button from "../component/Button";
 import { PRIOTITYSTYELS, TASK_TYPE } from "../utils";
-import AddUser from "../component/AddUser";
-import ConfirmatioDialog from "../component/Dialogs";
+import { TaskColor } from "../component/task";
+import { AddUser, Button, ConfirmatioDialog, Loading, Title } from "../component";
+import { useDeleteRestoreTastMutation, useGetAllTaskQuery } from "../redux/slices/api/taskApiSlice";
+import { useSearchParams } from "react-router-dom";
+import { toast } from "sonner";
+
 
 const ICONS = {
   high: <MdKeyboardDoubleArrowUp />,
@@ -20,6 +21,15 @@ const Trash = () => {
   const [msg, setMsg] = useState(null);
   const [type, setType] = useState("delete");
   const [selected, setSelected] = useState("");
+  const [searchParams] = useSearchParams();
+  const [searchTerm] = useState(searchParams.get("search") || "");
+
+  const { data, isLoading, refetch } = useGetAllTaskQuery({
+    strQuery: "",
+    isTrashed: "true",
+    search: searchTerm,
+  });
+  const [deleteRestoreTask] = useDeleteRestoreTastMutation();
 
   const deleteAllClick = () => {
     setType("deleteAll");
@@ -46,6 +56,34 @@ const Trash = () => {
     setOpenDialog(true);
   };
 
+  const deleteRestoreHandler = async () => {
+    try {
+      let res = null;
+      switch (type) {
+        case "delete":
+          res = await deleteRestoreTask({ id: selected, actionType: "delete" }).unwrap();
+          break;
+        case "deleteAll":
+          res = await deleteRestoreTask({ id: "", actionType: "deleteAll" }).unwrap();
+          break;
+        case "restore":
+          res = await deleteRestoreTask({ id: selected, actionType: "restore" }).unwrap();
+          break;
+        case "restoreAll":
+          res = await deleteRestoreTask({ id: "", actionType: "restoreAll" }).unwrap();
+          break;
+      }
+      toast.success(res?.message);
+      setTimeout(() => {
+        setOpenDialog(false);
+        refetch();
+      }, 500);
+    } catch (err) {
+      console.log(err);
+      toast.error(err?.data?.message || err.error);
+    }
+  };
+
   const TableHeader = () => (
     <thead className='border-b border-gray-300'>
       <tr className='text-black  text-left'>
@@ -61,9 +99,7 @@ const Trash = () => {
     <tr className='border-b border-gray-200 text-gray-600 hover:bg-gray-400/10'>
       <td className='py-2'>
         <div className='flex items-center gap-2'>
-          <div
-            className={clsx("w-4 h-4 rounded-full", TASK_TYPE[item.stage])}
-          />
+          <TaskColor className={TASK_TYPE[item?.stage]} />
           <p className='w-full line-clamp-2 text-base text-black'>
             {item?.title}
           </p>
@@ -98,52 +134,59 @@ const Trash = () => {
   );
 
   return (
-    <>
-      <div className='w-full md:px-1 px-0 mb-6'>
-        <div className='flex items-center justify-between mb-8'>
-          <Title title='Trashed Tasks' />
-
-          <div className='flex gap-2 md:gap-4 items-center'>
-            <Button
-              label='Restore All'
-              icon={<MdOutlineRestore className='text-lg hidden md:flex' />}
-              className='flex flex-row-reverse gap-1 items-center  text-black text-sm md:text-base rounded-md 2xl:py-2.5'
-              onClick={() => restoreAllClick()}
-            />
-            <Button
-              label='Delete All'
-              icon={<MdDelete className='text-lg hidden md:flex' />}
-              className='flex flex-row-reverse gap-1 items-center  text-red-600 text-sm md:text-base rounded-md 2xl:py-2.5'
-              onClick={() => deleteAllClick()}
-            />
-          </div>
-        </div>
-        <div className='bg-white px-2 md:px-6 py-4 shadow-md rounded'>
-          <div className='overflow-x-auto'>
-            <table className='w-full mb-5'>
-              <TableHeader />
-              <tbody>
-                {tasks?.map((tk, id) => (
-                  <TableRow key={id} item={tk} />
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+    isLoading ? (
+      <div className='py-10'>
+        <Loading />
       </div>
+    ) :
+    (
+        <>
+          <div className='w-full md:px-1 px-0 mb-6'>
+            <div className='flex items-center justify-between mb-8'>
+              <Title title='Trashed Tasks' />
 
-      <AddUser open={open} setOpen={setOpen} />
+              <div className='flex gap-2 md:gap-4 items-center'>
+                <Button
+                  label='Restore All'
+                  icon={<MdOutlineRestore className='text-lg hidden md:flex' />}
+                  className='flex flex-row-reverse gap-1 items-center  text-black text-sm md:text-base rounded-md 2xl:py-2.5'
+                  onClick={() => restoreAllClick()}
+                />
+                <Button
+                  label='Delete All'
+                  icon={<MdDelete className='text-lg hidden md:flex' />}
+                  className='flex flex-row-reverse gap-1 items-center  text-red-600 text-sm md:text-base rounded-md 2xl:py-2.5'
+                  onClick={() => deleteAllClick()}
+                />
+              </div>
+            </div>
+            <div className='bg-white px-2 md:px-6 py-4 shadow-md rounded'>
+              <div className='overflow-x-auto'>
+                <table className='w-full mb-5'>
+                  <TableHeader />
+                  <tbody>
+                    {data?.tasks?.map((tk, id) => (
+                      <TableRow key={id} item={tk} />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
 
-      <ConfirmatioDialog
-        open={openDialog}
-        setOpen={setOpenDialog}
-        msg={msg}
-        setMsg={setMsg}
-        type={type}
-        setType={setType}
-        onClick={() => deleteRestoreHandler()}
-      />
-    </>
+          <AddUser open={open} setOpen={setOpen} />
+
+          <ConfirmatioDialog
+            open={openDialog}
+            setOpen={setOpenDialog}
+            msg={msg}
+            setMsg={setMsg}
+            type={type}
+            setType={setType}
+            onClick={() => deleteRestoreHandler()}
+          />
+        </>
+    )
   );
 };
 

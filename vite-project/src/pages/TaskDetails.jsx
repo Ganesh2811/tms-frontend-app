@@ -94,9 +94,9 @@ const Activities = ({ activity, id, refetch }) => {
       setText("");
       toast.success(res?.message);
       refetch();
-    } catch (err) {
-      console.log(err);
-      toast.error(err?.data?.message || err.error);
+    } catch (error) {
+      console.log(error);
+      toast.error(error?.data?.message || error.error);
     }
   };
 
@@ -372,7 +372,7 @@ const TaskDetail = () => {
           </>
         ) : (
           <>
-              <Activities activity={data?.activities} id={id} refetch={refetch} />
+              <Activities activity={data?.task?.activities} id={id} refetch={refetch} />
           </>
         )}
       </Tabs>

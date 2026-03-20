@@ -7,7 +7,7 @@ import { MdCheck } from "react-icons/md";
 import { useGetTeamListsQuery } from "../../redux/slices/api/userApiSlice";
 
 const UserList = ({ setTeam, team }) => {
-    const { data, isLoading } = useGetTeamListsQuery({ search: "" });
+    const { data, isLoading } = useGetTeamListsQuery();
     const [selectedUsers, setSelectedUsers] = useState([]);
 
     const handleChange = (el) => {
