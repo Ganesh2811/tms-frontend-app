@@ -1,27 +1,27 @@
 import { Listbox, ListboxButton, Transition, ListboxOptions, ListboxOption } from "@headlessui/react";
 import { Fragment, useEffect, useState } from "react";
 import { BsChevronExpand } from "react-icons/bs";
-import { summary } from "../../assets/data";
 import clsx from "clsx";
 import { getInitials } from "../../utils";
 import { MdCheck } from "react-icons/md";
+import { useGetTeamListsQuery } from "../../redux/slices/api/userApiSlice";
 
 const UserList = ({ setTeam, team }) => {
-    const data = summary.users;
-    const [selectedUsers, setSelectedUsers] = useState([data[0]]);
+    const { data, isLoading } = useGetTeamListsQuery({ search: "" });
+    const [selectedUsers, setSelectedUsers] = useState([]);
 
     const handleChange = (el) => {
         setSelectedUsers(el);
-        console.log(selectedUsers)
         setTeam(el?.map((u) => u?._id));
     };
+
     useEffect(() => {
         if (team?.length < 1) {
             data && setSelectedUsers([data[0]]);
         } else {
             setSelectedUsers(team);
         }
-    }, []);
+    }, [isLoading]);
     
 
     return (

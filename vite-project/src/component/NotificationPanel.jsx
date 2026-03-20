@@ -5,6 +5,8 @@ import { BiSolidMessageRounded } from "react-icons/bi";
 import { HiBellAlert } from "react-icons/hi2";
 import { IoIosNotificationsOutline } from "react-icons/io";
 import { Link } from "react-router-dom";
+import { useGetNotificationsQuery, useMarkNotiAsReadMutation } from "../redux/slices/api/userApiSlice";
+import ViewNotification from "./ViewNotification ";
 
 const data = [
     {
@@ -55,10 +57,19 @@ const NotificationPanel = () => {
     const [open, setOpen] = useState(false);
     const[selected, setSelected] = useState(null);
 
-    //  const { data, refetch } = useGetNotificationsQuery();
-    //  const [markAsRead] = useMarkNotiAsReadMutation();
-    const readHandler = () => { }
-    const viewHandler = () => { }
+    const { data, refetch } = useGetNotificationsQuery();
+    const [markAsRead] = useMarkNotiAsReadMutation();
+
+    const readHandler = async (type, id) => {
+        await markAsRead({ type, id }).unwrap();
+        refetch();
+    };
+
+    const viewHandler = (el) => {
+        setSelected(el);
+        readHandler("one", el._id);
+        setOpen(true);
+    };
 
     const callsToAction = [
         { name: "Cancel", href: "#", icon: "" },
@@ -73,7 +84,7 @@ const NotificationPanel = () => {
     <>
         <Popover className="relative">
               <PopoverButton className='inline-flex items-center outline-none'>
-                  <div className='w-8 h-8 flex items-center justify-center text-gray-800 relative'>
+                  <div className='w-8 h-8 flex items-center justify-center text-gray-800 relative cursor-pointer'>
                       <IoIosNotificationsOutline className='text-2xl' />
                       {data?.length > 0 && (
                           <span className='absolute text-center top-0 right-1 text-sm text-white font-semibold w-4 h-4 rounded-full bg-red-600'>
@@ -142,6 +153,7 @@ const NotificationPanel = () => {
                   </PopoverPanel>
               </Transition>
         </Popover>
+        <ViewNotification open={open} setOpen={setOpen} el={selected} />
     </>
   )
 }

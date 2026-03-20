@@ -1,38 +1,43 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FaList } from "react-icons/fa";
 import { MdGridView } from "react-icons/md";
 import { IoMdAdd } from "react-icons/io";
-import { useParams } from "react-router-dom";
-import Loading from '../component/Loading';
-import Button from "../component/Button";
-import Title from '../component/Title';
-import Tabs from "../component/Tabs";
-import TaskTitle from '../component/TaskTitle';
-import BoardView from '../component/BoardView';
-import Table from '../component/task/Table';
-import AddTask from '../component/task/AddTask';
-import { tasks } from "../assets/data";
+import { useParams, useSearchParams } from "react-router-dom";
+import { Button, Loading, Table, Tabs, Title } from "../component";
+import { AddTask, BoardView, TaskTitle } from "../component/task";
+import { useGetAllTaskQuery } from '../redux/slices/api/taskApiSlice';
+import { useSelector } from 'react-redux';
+import { TASK_TYPE } from "../utils/index.js"
 
 const TABS = [
   { title: "Board View", icon: <MdGridView /> },
   { title: "List View", icon: <FaList /> },
 ];
 
-const TASK_TYPE = {
-  todo: "bg-blue-600",
-  "in progress": "bg-yellow-600",
-  completed: "bg-green-600",
-};
-
 const Tasks = () => {
   const params = useParams();
+  const { user } = useSelector((state) => state.auth);
+  const [searchParams] = useSearchParams();
+  const [searchTerm] = useState(searchParams.get("search") || "");
   const [selected, setSelected] = useState(0);
   const[open, setOpen] = useState(false);
-  const[loading, setLoading] = useState(false);
   const status = params?.status || ""; 
+  const { data, isLoading, refetch } = useGetAllTaskQuery({
+    strQuery: status,
+    isTrashed: "",
+    search: searchTerm,
+  });
+
+  useEffect(() => {
+    refetch();
+    window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+  }, [open]);
 
   return (
-    loading ? ( <div className='py-10'> <Loading /> </div> )  : (
+    isLoading ? ( 
+      <div className='py-10'> 
+        <Loading /> 
+      </div> )  : (
       <div className='w-full'>
         <div className='flex items-center justify-between mb-4'>
           <Title title={status ? `${status} Tasks` : "Tasks"} />
@@ -58,10 +63,10 @@ const Tasks = () => {
             )
           }
           {selected !== 1 ? (
-            <BoardView tasks={tasks} />
+            <BoardView tasks={data?.tasks} />
           ) : (
             <div className='w-full'>
-              <Table tasks={tasks} />
+              <Table tasks={data?.tasks} />
             </div>
           )}
           </Tabs>
@@ -72,4 +77,4 @@ const Tasks = () => {
   )
 }
 
-export default Tasks
+export default Tasks;

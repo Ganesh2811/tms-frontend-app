@@ -6,7 +6,7 @@ import TaskCard from "./TaskCard";
 import TaskColor from "./TaskColor";
 import TaskDialog from "./TaskDialog";
 import TaskTitle from "./TaskTitle";
-import UserList from "./UsersSelect";
+import UserList from "./UserList";
 
 export {
     AddSubTask,

@@ -11,6 +11,7 @@ import Button from "../component/Button";
 import Loading from "../component/Loading";
 import Tabs from "../component/Tabs";
 import TaskColor from "../component/task/TaskColor";
+import { useChangeSubTaskStatusMutation, useGetSingleTaskQuery, usePostTaskActivityMutation } from "../redux/slices/api/taskApiSlice";
 // import { useChangeSubTaskStatusMutation, useGetSingleTaskQuery, usePostTaskActivityMutation } from "../redux/slices/api/taskApiSlice";
 import { PRIOTITYSTYELS, TASK_TYPE, getCompletedSubTasks, getInitials } from "../utils";
 import { tasks } from "../assets/data";
@@ -81,23 +82,22 @@ const act_types = [
   "Assigned",
 ];
 
-const Activities = ({ activity, id }) => {
+const Activities = ({ activity, id, refetch }) => {
   const [selected, setSelected] = useState(act_types[0]);
   const [text, setText] = useState("");
-  const isLoading = false;;
-  // const [postActivity, { isLoading }] = usePostTaskActivityMutation();
+  const [postActivity, { isLoading }] = usePostTaskActivityMutation();
 
   const handleSubmit = async () => {
-    // try {
-    //   const data = { type: selected?.toLowerCase(), activity: text };
-    //   const res = await postActivity({ data, id }).unwrap();
-    //   setText("");
-    //   toast.success(res?.message);
-    //   refetch();
-    // } catch (err) {
-    //   console.log(err);
-    //   toast.error(err?.data?.message || err.error);
-    // }
+    try {
+      const data = { type: selected?.toLowerCase(), activity: text };
+      const res = await postActivity({ data, id }).unwrap();
+      setText("");
+      toast.success(res?.message);
+      refetch();
+    } catch (err) {
+      console.log(err);
+      toast.error(err?.data?.message || err.error);
+    }
   };
 
   const Card = ({ item }) => {
@@ -178,11 +178,10 @@ const Activities = ({ activity, id }) => {
 
 const TaskDetail = () => {
   const { id } = useParams();
-  // const { data, isLoading, refetch } = useGetSingleTaskQuery(id);
-  // const [subTaskAction, { isLoading: isSubmitting }] = useChangeSubTaskStatusMutation();
+  const { data, isLoading, refetch } = useGetSingleTaskQuery(id);
+  const [subTaskAction, { isLoading: isSubmitting }] = useChangeSubTaskStatusMutation();
   const [selected, setSelected] = useState(0);
-  // const task = data?.task || [];
-  const task = tasks[3]
+  const task = data?.task || [];
 
   const handleSubmitAction = async (el) => {
     try {
@@ -193,17 +192,17 @@ const TaskDetail = () => {
       };
       const res = await subTaskAction({ ...data, }).unwrap();
       toast.success(res?.message);
-      // refetch();
+      refetch();
     } catch (err) {
       console.log(err);
       toast.error(err?.data?.message || err.error);
     }
   };
 
-  // if (isLoading)
-  //   <div className='py-10'>
-  //     <Loading />
-  //   </div>;
+  if (isLoading)
+    <div className='py-10'>
+      <Loading />
+    </div>;
 
   const percentageCompleted = task?.subTasks?.length === 0 ? 0 : (getCompletedSubTasks(task?.subTasks) / task?.subTasks?.length) * 100;
 
@@ -229,7 +228,7 @@ const TaskDetail = () => {
                   </div>
 
                   <div className={clsx("flex items-center gap-2")}>
-                    {/* <TaskColor className={TASK_TYPE[task?.stage]} /> */}
+                    <TaskColor className={TASK_TYPE[task?.stage]} />
                     <div className={clsx("w-4 h-4 rounded-full", TASK_TYPE[task?.stage])} />
                     <span className='text-black uppercase'>{task?.stage}</span>
                   </div>
@@ -373,7 +372,7 @@ const TaskDetail = () => {
           </>
         ) : (
           <>
-            <Activities activity={task?.activities} id={id} />
+              <Activities activity={data?.activities} id={id} refetch={refetch} />
           </>
         )}
       </Tabs>

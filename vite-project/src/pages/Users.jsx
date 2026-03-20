@@ -1,12 +1,13 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { toast } from "sonner";
 import Title from "../component/Title";
 import Button from "../component/Button";
 import { IoMdAdd } from "react-icons/io";
-import { summary } from "../assets/data";
 import { getInitials } from "../utils";
 import clsx from "clsx";
 import ConfirmatioDialog, { UserAction } from "../component/Dialogs";
 import AddUser from "../component/AddUser";
+import { useDeleteUserMutation, useGetTeamListsQuery, useUserActionMutation } from "../redux/slices/api/userApiSlice";
 
 const Users = () => {
   const [openDialog, setOpenDialog] = useState(false);
@@ -14,8 +15,48 @@ const Users = () => {
   const [openAction, setOpenAction] = useState(false);
   const [selected, setSelected] = useState(null);
 
-  const userActionHandler = () => { };
-  const deleteHandler = () => { };
+  const { data, isLoading, refetch } = useGetTeamListsQuery();
+  const [deleteUser] = useDeleteUserMutation();
+  const [userAction] = useUserActionMutation();
+
+  const userActionHandler = async () => {
+    try {
+      const res = await userAction({
+        isActive: !selected?.isActive,
+        id: selected?._id,
+      });
+
+      refetch();
+      toast.success(res?.data?.message);
+      setSelected(null);
+      setTimeout(() => {
+        setOpenAction(false);
+      }, 500);
+    } catch (error) {
+      console.log(err);
+      toast.error(err?.data?.message || err.error);
+    }
+  };
+
+  const deleteHandler = async () => {
+    try {
+      const res = await deleteUser(selected);
+      refetch();
+      toast.success("Deleted Succssfully");
+      setSelected(null);
+      setTimeout(() => {
+        setOpenDialog(false);
+      }, 500);
+    } catch (error) {
+      console.log(err);
+      toast.error(err?.data?.message || err.error);
+    }
+  };
+
+  const userStatusClick = (el) => {
+    setSelected(el);
+    setOpenAction(true);
+  };
 
   const deleteClick = (id) => {
     setSelected(id);
@@ -26,6 +67,10 @@ const Users = () => {
     setSelected(el);
     setOpen(true);
   };
+
+  useEffect(() => {
+    refetch();
+  }, [open]);
 
   const TableHeader = () => (
     <thead className='border-b border-gray-300'>
@@ -58,7 +103,7 @@ const Users = () => {
 
       <td>
         <button
-          // onClick={() => userStatusClick(user)}
+          onClick={() => userStatusClick(user)}
           className={clsx(
             "w-fit px-4 py-1 rounded-full",
             user?.isActive ? "bg-blue-200" : "bg-yellow-100"
@@ -104,7 +149,7 @@ const Users = () => {
             <table className='w-full mb-5'>
               <TableHeader />
               <tbody>
-                {summary?.users?.map((user, index) => (
+                {data?.map((user, index) => (
                   <TableRow key={index} user={user} />
                 ))}
               </tbody>

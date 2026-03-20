@@ -6,9 +6,8 @@ import { LuClipboardList } from "react-icons/lu";
 import { FaNewspaper, FaUsers } from "react-icons/fa";
 import { FaArrowsToDot } from "react-icons/fa6";
 import { BGS, PRIOTITYSTYELS, TASK_TYPE, getInitials } from "../utils";
-import { summary } from "../assets/data";
-import Chart from "../component/Chart";
-import UserInfo from "../component/UserInfo";
+import { Chart, Loading, UserInfo } from "../component";
+import { useGetDasboardStatsQuery } from "../redux/slices/api/taskApiSlice";
 
 const TaskTable = ({tasks}) => {
   const ICONS = {
@@ -24,7 +23,6 @@ const TaskTable = ({tasks}) => {
         <th className="py-2">Priority</th>
         <th className="py-2">Team</th>
         <th className="py-2 hidden md:table-cell">Created At</th>
-
       </tr>
     </thead>
   );
@@ -133,12 +131,27 @@ const UserTable = ({ users }) => {
 }
 
 const Dashboard = () => {
-  const totals = summary.tasks;
+  const { data, isLoading, error } = useGetDasboardStatsQuery();
+  // const { user } = useSelector((state) => state.auth);
+
+  // useEffect(() => {
+  //   window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+  // }, []);
+
+  const totals = data?.tasks || [];
+
+  if (isLoading)
+    return (
+      <div className='py-10'>
+        <Loading />
+      </div>
+    );
+
   const stats = [
     {
       _id: "1",
       label: "TOTAL TASK",
-      total: summary?.totalTasks || 0,
+      total: data?.totalTasks || 0,
       icon: <FaNewspaper />,
       bg: "bg-[#1d4ed8]",
     },
@@ -192,14 +205,12 @@ const Dashboard = () => {
 
       <div className="w-full bg-white my-16 p-4 rounded shadow-sm">
         <h4 className="text-xl text-gray-600 font-semibold">Chart by Priority</h4>
-        <Chart />
+        <Chart data={data?.graphData} />
       </div>
 
       <div className="w-full flex flex-col md:flex-row gap-4 2xl:gap-10 py-8">
-        {/* left */}
-          <TaskTable tasks={summary?.last10Task} />
-        {/* right */}
-        <UserTable users={summary?.users} />
+        {data && <TaskTable tasks={data?.last10Task} />}
+        {data && <UserTable users={data?.users} /> }
       </div>  
     </div>
   )

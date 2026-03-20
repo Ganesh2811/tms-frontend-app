@@ -52,6 +52,5 @@ export const BGS = [
 
 export const getCompletedSubTasks = (items) => {
     const totalCompleted = items?.filter((item) => item?.isCompleted).length;
-
-    return totalCompleted;``
+    return totalCompleted;
 };
